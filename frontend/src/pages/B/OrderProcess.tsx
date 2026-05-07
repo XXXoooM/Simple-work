@@ -87,6 +87,7 @@ export default function OrderProcess() {
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
         '更新失败';
       toast.error(message);
+    } finally {
       setUpdatingId(null);
       setCompleteOpen(false);
       setCompleteOrderId(null);
