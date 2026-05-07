@@ -94,17 +94,44 @@ npm run dev
 
 ## 部署
 
+### 首次部署
+
 ```bash
-# 后端 → Cloudflare Workers
+# 1. 复制配置模板
 cd worker
+cp wrangler.toml.example wrangler.toml
+
+# 2. 创建 D1 数据库并填入 ID
 npx wrangler d1 create order-db-production
+# 将输出的 database_id 填入 wrangler.toml
+
+# 3. 初始化数据库
 npx wrangler d1 execute order-db-production --remote --file=schema.sql
+
+# 4. 设置 JWT 密钥
 echo "your-jwt-secret" | npx wrangler secret put JWT_SECRET
+
+# 5. 部署后端
 npx wrangler deploy
 
-# 前端 → Cloudflare Pages
-cd frontend
+# 6. 部署前端
+cd ../frontend
 echo "VITE_API_URL=https://your-worker.workers.dev" > .env.production
+npm install && npm run build
+npx wrangler pages deploy dist --project-name=department-orders-web
+```
+
+### 版本更新上线
+
+代码修改后，只需两步：
+
+```bash
+# 后端更新
+cd worker
+npx wrangler deploy
+
+# 前端更新
+cd frontend
 npm run build
 npx wrangler pages deploy dist --project-name=department-orders-web
 ```
