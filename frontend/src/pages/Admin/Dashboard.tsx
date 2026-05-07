@@ -1,20 +1,14 @@
-import { useAuthStore } from '@/stores/authStore';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { LogOut, Users, Shield, Settings, BarChart3, ScrollText } from 'lucide-react';
+import { Users, Shield, Settings, BarChart3, ScrollText } from 'lucide-react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
+import UserNav from '@/components/UserNav';
 
 export default function AdminDashboard() {
-  const user = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
   const location = useLocation();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login', { replace: true });
-  };
 
   const isRoot = location.pathname === '/admin';
 
@@ -70,11 +64,7 @@ export default function AdminDashboard() {
             </nav>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">{user?.name}</span>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              退出
-            </Button>
+            <UserNav />
           </div>
         </div>
       </header>
