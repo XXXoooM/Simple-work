@@ -206,6 +206,29 @@ export async function handleChangePassword(request: Request, env: Env) {
     return error(400, '新密码长度不能少于 6 位');
   }
 
+  // === 校验修改频率 ===
+  const { results: logs } = await env.DB.prepare(
+    'SELECT changed_at FROM password_logs WHERE user_id = ? ORDER BY changed_at DESC LIMIT 2'
+  ).bind(user.sub).all<{ changed_at: string }>();
+
+  const now = Date.now();
+  if (logs && logs.length > 0) {
+    const lastChange = new Date(logs[0].changed_at + 'Z').getTime();
+    const hoursSinceLast = (now - lastChange) / (1000 * 60 * 60);
+    
+    if (hoursSinceLast < 24) {
+      return error(400, '两次修改密码间隔必须大于 24 小时');
+    }
+
+    if (logs.length > 1) {
+      const secondLastChange = new Date(logs[1].changed_at + 'Z').getTime();
+      const daysSinceSecondLast = (now - secondLastChange) / (1000 * 60 * 60 * 24);
+      if (daysSinceSecondLast < 7) {
+        return error(400, '7天内最多只能修改两次密码');
+      }
+    }
+  }
+
   // 查询当前密码
   const dbUser = await env.DB.prepare('SELECT password FROM users WHERE id = ?')
     .bind(user.sub)
@@ -224,9 +247,11 @@ export async function handleChangePassword(request: Request, env: Env) {
   const { hash } = await import('bcryptjs');
   const hashed = await hash(body.newPassword, 10);
 
-  await env.DB.prepare('UPDATE users SET password = ? WHERE id = ?')
-    .bind(hashed, user.sub)
-    .run();
+  // 更新密码并插入日志
+  await env.DB.batch([
+    env.DB.prepare('UPDATE users SET password = ? WHERE id = ?').bind(hashed, user.sub),
+    env.DB.prepare('INSERT INTO password_logs (user_id) VALUES (?)').bind(user.sub)
+  ]);
 
   return json({ code: 200, message: '密码修改成功', data: null });
 }

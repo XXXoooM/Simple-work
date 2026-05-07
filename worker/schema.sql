@@ -62,6 +62,14 @@ CREATE INDEX IF NOT EXISTS idx_orders_sender ON orders(sender_id);
 CREATE INDEX IF NOT EXISTS idx_users_type_status ON users(user_type, status);
 CREATE INDEX IF NOT EXISTS idx_notif_user ON notifications(user_id, is_read);
 
+-- 密码修改记录表
+CREATE TABLE IF NOT EXISTS password_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    changed_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_pwd_log_user ON password_logs(user_id);
+
 -- updated_at 自动更新触发器
 CREATE TRIGGER IF NOT EXISTS update_users_timestamp
   AFTER UPDATE ON users
