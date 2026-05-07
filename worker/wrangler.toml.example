@@ -2,7 +2,7 @@ name = "department-orders-api"
 main = "src/index.ts"
 compatibility_date = "2024-12-01"
 
-# 生产环境 D1 数据库
+# D1 数据库 — 运行 `npx wrangler d1 create order-db-production` 获取 ID
 [[d1_databases]]
 binding = "DB"
 database_name = "order-db-production"
