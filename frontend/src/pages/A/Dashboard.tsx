@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { LogOut, Plus, History, ClipboardList, BarChart3, ScrollText } from 'lucide-react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
+import NotificationBell from '@/components/NotificationBell';
 
 export default function DashboardA() {
   const user = useAuthStore((s) => s.user);
@@ -70,7 +71,8 @@ export default function DashboardA() {
               </Button>
             </nav>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <NotificationBell />
             <span className="text-sm text-muted-foreground">
               {user?.name}
             </span>

@@ -10,12 +10,13 @@
     "db:init:remote": "wrangler d1 execute order-db --file=./schema.sql --remote"
   },
   "devDependencies": {
-    "wrangler": "^4.0.0",
     "@cloudflare/workers-types": "^4.0.0",
-    "typescript": "^5.5.0"
+    "@types/bcryptjs": "^2.4.6",
+    "typescript": "^5.5.0",
+    "wrangler": "^4.0.0"
   },
   "dependencies": {
-    "itty-router": "^5.0.0",
-    "bcryptjs": "^2.4.3"
+    "bcryptjs": "^2.4.3",
+    "itty-router": "^5.0.0"
   }
 }

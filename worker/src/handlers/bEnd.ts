@@ -21,6 +21,7 @@ interface OrderRow {
 
 interface StatusUpdateBody {
   status: 'PROCESSING' | 'COMPLETED';
+  remark?: string;
 }
 
 // ===== 处理函数 =====
@@ -78,6 +79,16 @@ export async function handleReceiveOrder(request: Request, env: Env) {
   await env.DB.prepare(
     "UPDATE orders SET status = 'RECEIVED', received_at = datetime('now') WHERE id = ?"
   ).bind(orderId).run();
+
+  // 写通知给 A 端发送人
+  const orderInfo = await env.DB.prepare(
+    'SELECT order_title, sender_id FROM orders WHERE id = ?'
+  ).bind(orderId).first<{ order_title: string; sender_id: number }>();
+  if (orderInfo) {
+    await env.DB.prepare(
+      `INSERT INTO notifications (user_id, type, title, content) VALUES (?, 'ORDER_RECEIVED', ?, ?)`
+    ).bind(orderInfo.sender_id, '订单已被接收', `您的订单「${orderInfo.order_title}」已被接收`).run();
+  }
 
   return json({
     code: 200,
@@ -157,9 +168,29 @@ export async function handleUpdateOrderStatus(request: Request, env: Env) {
 
   // 更新状态和对应时间戳
   const timeField = newStatus === 'PROCESSING' ? 'processing_at' : 'completed_at';
-  await env.DB.prepare(
-    `UPDATE orders SET status = ?, ${timeField} = datetime('now') WHERE id = ?`
-  ).bind(newStatus, orderId).run();
+
+  if (newStatus === 'COMPLETED' && body.remark?.trim()) {
+    await env.DB.prepare(
+      `UPDATE orders SET status = ?, ${timeField} = datetime('now'), completed_remark = ? WHERE id = ?`
+    ).bind(newStatus, body.remark.trim(), orderId).run();
+  } else {
+    await env.DB.prepare(
+      `UPDATE orders SET status = ?, ${timeField} = datetime('now') WHERE id = ?`
+    ).bind(newStatus, orderId).run();
+  }
+
+  // 完成时写通知给 A 端发送人
+  if (newStatus === 'COMPLETED') {
+    const orderInfo = await env.DB.prepare(
+      'SELECT order_title, sender_id FROM orders WHERE id = ?'
+    ).bind(orderId).first<{ order_title: string; sender_id: number }>();
+    if (orderInfo) {
+      const remarkNote = body.remark?.trim() ? `\n备注：${body.remark.trim()}` : '';
+      await env.DB.prepare(
+        `INSERT INTO notifications (user_id, type, title, content) VALUES (?, 'ORDER_COMPLETED', ?, ?)`
+      ).bind(orderInfo.sender_id, '订单已完成', `您的订单「${orderInfo.order_title}」已完成${remarkNote}`).run();
+    }
+  }
 
   return json({
     code: 200,

@@ -6,8 +6,10 @@ import { handleAStats, handleBStats, handleAdminStats } from './handlers/stats';
 import { handleALogs, handleBLogs, handleAdminLogs } from './handlers/logs';
 import {
   handleListUsers, handleCreateUser, handleEditUser, handleDisableUser, handleAssignRole,
+  handleDeleteUser,
   handleListRoles, handleCreateRole, handleEditRole, handleDeleteRole,
 } from './handlers/admin';
+import { handleGetNotifications, handleMarkAllRead } from './handlers/notifications';
 import { withAuth, requireUserType, requirePermissions } from './middleware';
 import { verifyJWT } from './auth';
 
@@ -68,6 +70,11 @@ router.put('/api/admin/roles/:id', withAuth, requirePermissions('role:edit'), ha
 router.delete('/api/admin/roles/:id', withAuth, requirePermissions('role:delete'), handleDeleteRole);
 router.get('/api/admin/stats', withAuth, requirePermissions('user:list'), handleAdminStats);
 router.get('/api/admin/logs', withAuth, requirePermissions('user:list'), handleAdminLogs);
+router.delete('/api/admin/users/:id', withAuth, requirePermissions('user:disable'), handleDeleteUser);
+
+// ===== 通知路由（A/B 共用）=====
+router.get('/api/notifications', withAuth, handleGetNotifications);
+router.put('/api/notifications/read', withAuth, handleMarkAllRead);
 
 // ===== 兜底 404 =====
 router.all('*', () => error(404, 'Not Found'));

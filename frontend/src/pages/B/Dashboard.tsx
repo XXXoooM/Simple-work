@@ -5,6 +5,7 @@ import { Separator } from '@/components/ui/separator';
 import { LogOut, Inbox, PlayCircle, Headphones, BarChart3, ScrollText } from 'lucide-react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useOrderWebSocket } from '@/hooks/useOrderWebSocket';
+import NotificationBell from '@/components/NotificationBell';
 
 export default function DashboardB() {
   const user = useAuthStore((s) => s.user);
@@ -74,7 +75,8 @@ export default function DashboardB() {
               </Button>
             </nav>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <NotificationBell />
             <span className="text-sm text-muted-foreground">
               {user?.name}
             </span>

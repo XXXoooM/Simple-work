@@ -16,7 +16,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { ArrowLeft, Plus, Loader2, UserCog, Ban, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Loader2, UserCog, Ban, CheckCircle, Trash2 } from 'lucide-react';
 
 interface User {
   id: number;
@@ -52,6 +52,11 @@ export default function UserList() {
   const [assignUserId, setAssignUserId] = useState<number | null>(null);
   const [assignRoleId, setAssignRoleId] = useState('');
   const [assigning, setAssigning] = useState(false);
+
+  // 删除用户弹窗
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -128,6 +133,24 @@ export default function UserList() {
       toast.error(msg);
     } finally {
       setAssigning(false);
+    }
+  };
+
+  // 删除用户
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const res = await api.delete(`/api/admin/users/${deleteTarget.id}`);
+      toast.success(res.data.message);
+      setDeleteOpen(false);
+      setDeleteTarget(null);
+      fetchData();
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || '删除失败';
+      toast.error(msg);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -211,6 +234,18 @@ export default function UserList() {
                         onCheckedChange={() => handleToggleStatus(u.id)}
                         aria-label="启用/禁用"
                       />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                        onClick={() => {
+                          setDeleteTarget(u);
+                          setDeleteOpen(true);
+                        }}
+                      >
+                        <Trash2 className="mr-1 h-3.5 w-3.5" />
+                        删除
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -309,6 +344,27 @@ export default function UserList() {
             <Button onClick={handleAssignRole} disabled={assigning || !assignRoleId}>
               {assigning ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               确认分配
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 删除用户确认 Dialog */}
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-red-600">删除用户</DialogTitle>
+            <DialogDescription>
+              确定要删除用户 <strong>{deleteTarget?.username}</strong>（{deleteTarget?.name}）吗？
+              <br />
+              <span className="text-red-500 font-medium">此操作不可恢复。</span>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteOpen(false)}>取消</Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+              {deleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              确认删除
             </Button>
           </DialogFooter>
         </DialogContent>

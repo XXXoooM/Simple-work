@@ -118,6 +118,13 @@ export async function handleCreateOrder(request: Request, env: Env) {
       console.error('WebSocket push failed');
     }
 
+    // 写通知给 B 端接收人
+    try {
+      await env.DB.prepare(
+        `INSERT INTO notifications (user_id, type, title, content) VALUES (?, 'NEW_ORDER', ?, ?)`
+      ).bind(receiverId, '收到新订单', `${user.name} 向您发送了订单「${orderTitle.trim()}」`).run();
+    } catch { /* 通知写入失败不影响主流程 */ }
+
     return json({
       code: 200,
       message: '订单创建成功',

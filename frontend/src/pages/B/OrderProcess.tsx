@@ -4,6 +4,10 @@ import api from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { ArrowLeft, Play, CheckCircle, Loader2, ListTodo, User, Calendar } from 'lucide-react';
 
@@ -41,6 +45,11 @@ export default function OrderProcess() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
 
+  // 完成确认弹窗
+  const [completeOpen, setCompleteOpen] = useState(false);
+  const [completeOrderId, setCompleteOrderId] = useState<number | null>(null);
+  const [completeRemark, setCompleteRemark] = useState('');
+
   const fetchActiveOrders = useCallback(async () => {
     setLoading(true);
     try {
@@ -57,10 +66,10 @@ export default function OrderProcess() {
     fetchActiveOrders();
   }, [fetchActiveOrders]);
 
-  const handleStatusUpdate = async (orderId: number, newStatus: string) => {
+  const handleStatusUpdate = async (orderId: number, newStatus: string, remark?: string) => {
     setUpdatingId(orderId);
     try {
-      await api.put(`/api/b/orders/${orderId}/status`, { status: newStatus });
+      await api.put(`/api/b/orders/${orderId}/status`, { status: newStatus, remark });
 
       if (newStatus === 'COMPLETED') {
         toast.success('订单已完成');
@@ -78,8 +87,10 @@ export default function OrderProcess() {
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
         '更新失败';
       toast.error(message);
-    } finally {
       setUpdatingId(null);
+      setCompleteOpen(false);
+      setCompleteOrderId(null);
+      setCompleteRemark('');
     }
   };
 
@@ -163,7 +174,14 @@ export default function OrderProcess() {
                       <Button
                         size="sm"
                         variant={order.status === 'PROCESSING' ? 'default' : 'secondary'}
-                        onClick={() => handleStatusUpdate(order.id, config.nextStatus!)}
+                        onClick={() => {
+                          if (config.nextStatus === 'COMPLETED') {
+                            setCompleteOrderId(order.id);
+                            setCompleteOpen(true);
+                          } else {
+                            handleStatusUpdate(order.id, config.nextStatus!);
+                          }
+                        }}
                         disabled={updatingId === order.id}
                         className="ml-4 transition-all duration-200"
                       >
@@ -189,6 +207,34 @@ export default function OrderProcess() {
           })}
         </div>
       )}
+
+      {/* 完成确认 Dialog */}
+      <Dialog open={completeOpen} onOpenChange={(v) => { if (!v) { setCompleteOpen(false); setCompleteRemark(''); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>确认完成订单</DialogTitle>
+            <DialogDescription>标记完成后订单将从进行中列表移除。</DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <Textarea
+              placeholder="留言备注（可选）"
+              value={completeRemark}
+              onChange={(e) => setCompleteRemark(e.target.value)}
+              rows={3}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setCompleteOpen(false); setCompleteRemark(''); }}>取消</Button>
+            <Button
+              onClick={() => completeOrderId && handleStatusUpdate(completeOrderId, 'COMPLETED', completeRemark)}
+              disabled={updatingId !== null}
+            >
+              {updatingId !== null ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+              确认完成
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

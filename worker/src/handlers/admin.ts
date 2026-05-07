@@ -221,6 +221,43 @@ export async function handleAssignRole(request: Request, env: Env) {
   });
 }
 
+/**
+ * DELETE /api/admin/users/:id
+ * 删除用户（二次确认后调用）
+ */
+export async function handleDeleteUser(request: Request, env: Env) {
+  const currentUser = (request as AuthedRequest).user;
+  const url = new URL(request.url);
+  const userId = parseInt(url.pathname.split('/')[4], 10);
+
+  if (isNaN(userId)) return error(400, '无效的用户 ID');
+
+  // 禁止删除自己
+  if (userId === currentUser.sub) {
+    return error(400, '不能删除自己的账号');
+  }
+
+  const user = await env.DB.prepare('SELECT id, username FROM users WHERE id = ?')
+    .bind(userId).first<{ id: number; username: string }>();
+  if (!user) return error(404, '用户不存在');
+
+  // 检查关联订单
+  const orderCount = await env.DB.prepare(
+    'SELECT COUNT(*) as count FROM orders WHERE sender_id = ? OR receiver_id = ?'
+  ).bind(userId, userId).first<{ count: number }>();
+
+  if (orderCount && orderCount.count > 0) {
+    return error(400, `该用户关联 ${orderCount.count} 条订单，无法删除。请先禁用该用户。`);
+  }
+
+  // 删除通知
+  await env.DB.prepare('DELETE FROM notifications WHERE user_id = ?').bind(userId).run();
+  // 删除用户
+  await env.DB.prepare('DELETE FROM users WHERE id = ?').bind(userId).run();
+
+  return json({ code: 200, message: `用户「${user.username}」已删除`, data: null });
+}
+
 // ===== 角色管理 =====
 
 /**

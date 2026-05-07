@@ -41,13 +41,26 @@ CREATE TABLE IF NOT EXISTS orders (
   created_at TEXT DEFAULT (datetime('now')),
   received_at TEXT,
   processing_at TEXT,
-  completed_at TEXT
+  completed_at TEXT,
+  completed_remark TEXT
+);
+
+-- 消息通知表
+CREATE TABLE IF NOT EXISTS notifications (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  type TEXT NOT NULL,
+  title TEXT NOT NULL,
+  content TEXT,
+  is_read INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now'))
 );
 
 -- 索引
 CREATE INDEX IF NOT EXISTS idx_orders_receiver_status ON orders(receiver_id, status);
 CREATE INDEX IF NOT EXISTS idx_orders_sender ON orders(sender_id);
 CREATE INDEX IF NOT EXISTS idx_users_type_status ON users(user_type, status);
+CREATE INDEX IF NOT EXISTS idx_notif_user ON notifications(user_id, is_read);
 
 -- updated_at 自动更新触发器
 CREATE TRIGGER IF NOT EXISTS update_users_timestamp
@@ -71,3 +84,4 @@ INSERT OR IGNORE INTO roles (name, permissions, is_preset) VALUES
 -- ⚠️ 部署前请替换为实际哈希值
 INSERT OR IGNORE INTO users (username, password, name, user_type, role_id, created_by)
 VALUES ('admin', '$2a$10$tiTwpbFaFnVv1fEFWTkQQ.0P9qDjIoppKNuJFX7YVVAxLH5zyP9De', '系统管理员', 'A', 1, 1);
+
