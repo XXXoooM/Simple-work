@@ -1,0 +1,20 @@
+name = "department-orders-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+# 生产环境 D1 数据库
+[[d1_databases]]
+binding = "DB"
+database_name = "order-db-production"
+database_id = "YOUR_D1_DATABASE_ID"
+
+[durable_objects]
+bindings = [
+  { name = "ORDER_WS", class_name = "OrderWebSocket" }
+]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["OrderWebSocket"]
+
+# JWT_SECRET 通过 wrangler secret 设置，不写在配置文件中

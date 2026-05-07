@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.output/
+
+# Environment & secrets
+.env
+.env.local
+.env.production
+.dev.vars
+
+# Wrangler local state
+.wrangler/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
