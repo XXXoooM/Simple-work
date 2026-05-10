@@ -1,20 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '@/lib/api';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Button, Card, CardBody, CardHeader, Input, Textarea, Select, SelectItem, Spinner } from '@heroui/react';
 import { toast } from 'sonner';
-import { Send, Loader2, ArrowLeft } from 'lucide-react';
+import { Send, ArrowLeft } from 'lucide-react';
 
 interface Receiver {
   id: number;
@@ -112,115 +101,107 @@ export default function OrderCreate() {
 
       {/* 返回按钮 */}
       <Button
-        variant="ghost"
+        variant="light"
         size="sm"
-        onClick={() => navigate('/a')}
-        className="mb-4 -ml-2"
+        onPress={() => navigate('/a')}
+        className="mb-4 -ml-2 text-default-600"
+        startContent={<ArrowLeft className="h-4 w-4" />}
       >
-        <ArrowLeft className="mr-1.5 h-4 w-4" />
         返回工作台
       </Button>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <Card className="shadow-sm">
+        <CardHeader className="flex flex-col items-start px-6 pt-6 pb-2">
+          <p className="flex items-center gap-2 text-lg font-semibold text-foreground">
             <Send className="h-5 w-5" />
             创建新订单
-          </CardTitle>
-          <CardDescription>
+          </p>
+          <p className="text-sm text-default-500 mt-1">
             选择接收人并填写订单信息，提交后接收人将立即收到通知。
-          </CardDescription>
+          </p>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <CardBody className="px-6 pb-6 pt-4">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             {/* 日期选择 */}
-            <div className="space-y-2">
-              <Label htmlFor="orderDate">订单日期</Label>
-              <Input
-                id="orderDate"
-                type="date"
-                value={orderDate}
-                onChange={(e) => setOrderDate(e.target.value)}
-                required
-              />
-            </div>
+            <Input
+              type="date"
+              label="订单日期"
+              variant="bordered"
+              value={orderDate}
+              onValueChange={setOrderDate}
+              isRequired
+              labelPlacement="outside"
+              placeholder="选择日期"
+            />
 
             {/* 接收人选择 */}
-            <div className="space-y-2">
-              <Label htmlFor="receiver">接收人（B 端）</Label>
-              {loading ? (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  加载中...
-                </div>
-              ) : receivers.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-2">
-                  暂无可用的 B 端用户，请联系管理员添加。
-                </p>
-              ) : (
-                <Select value={receiverId} onValueChange={setReceiverId}>
-                  <SelectTrigger id="receiver">
-                    <SelectValue placeholder="选择接收人..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {receivers.map((r) => (
-                      <SelectItem key={r.id} value={String(r.id)}>
-                        {r.name}（{r.username}）
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
+            {loading ? (
+              <div className="flex items-center gap-2 text-sm text-default-500 py-2">
+                <Spinner size="sm" />
+                加载中...
+              </div>
+            ) : receivers.length === 0 ? (
+              <p className="text-sm text-default-500 py-2">
+                暂无可用的 B 端用户，请联系管理员添加。
+              </p>
+            ) : (
+              <Select
+                label="接收人（B 端）"
+                variant="bordered"
+                placeholder="选择接收人..."
+                selectedKeys={receiverId ? new Set([receiverId]) : new Set()}
+                onSelectionChange={(keys) => {
+                  const key = Array.from(keys)[0] as string;
+                  setReceiverId(key);
+                }}
+                isRequired
+                labelPlacement="outside"
+              >
+                {receivers.map((r) => (
+                  <SelectItem key={String(r.id)} textValue={`${r.name}（${r.username}）`}>
+                    {r.name} <span className="text-default-400">({r.username})</span>
+                  </SelectItem>
+                ))}
+              </Select>
+            )}
 
             {/* 订单标题 */}
-            <div className="space-y-2">
-              <Label htmlFor="orderTitle">订单标题</Label>
-              <Input
-                id="orderTitle"
-                placeholder="例如：4月29日剪辑任务"
-                value={orderTitle}
-                onChange={(e) => setOrderTitle(e.target.value)}
-                maxLength={100}
-                required
-              />
-            </div>
+            <Input
+              label="订单标题"
+              variant="bordered"
+              placeholder="例如：4月29日剪辑任务"
+              value={orderTitle}
+              onValueChange={setOrderTitle}
+              maxLength={100}
+              isRequired
+              labelPlacement="outside"
+            />
 
             {/* 订单内容（可选） */}
-            <div className="space-y-2">
-              <Label htmlFor="orderContent">
-                订单详情 <span className="text-muted-foreground">（可选）</span>
-              </Label>
-              <Textarea
-                id="orderContent"
-                placeholder="填写需要特别说明的内容..."
-                value={orderContent}
-                onChange={(e) => setOrderContent(e.target.value)}
-                maxLength={2000}
-                rows={4}
-              />
-            </div>
+            <Textarea
+              label="订单详情（可选）"
+              variant="bordered"
+              placeholder="填写需要特别说明的内容..."
+              value={orderContent}
+              onValueChange={setOrderContent}
+              maxLength={2000}
+              minRows={4}
+              labelPlacement="outside"
+            />
 
             {/* 提交按钮 */}
             <Button
               type="submit"
-              className="w-full transition-all duration-200"
-              disabled={submitting || !isFormValid}
+              color="primary"
+              className="w-full mt-2"
+              isLoading={submitting}
+              isDisabled={!isFormValid}
+              startContent={!submitting && <Send className="h-4 w-4" />}
             >
-              {submitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  提交中...
-                </>
-              ) : (
-                <>
-                  <Send className="mr-2 h-4 w-4" />
-                  提交订单
-                </>
-              )}
+              {submitting ? '提交中...' : '提交订单'}
             </Button>
           </form>
-        </CardContent>
+        </CardBody>
       </Card>
     </div>
   );

@@ -1,9 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ScrollText, ChevronDown, ChevronUp, Loader2, Search, X } from 'lucide-react';
+import { Card, CardBody, CardHeader, Chip, Button, Input, Select, SelectItem, SelectSection, Spinner } from '@heroui/react';
+import { ScrollText, ChevronDown, ChevronUp, Search, X } from 'lucide-react';
 import api from '@/lib/api';
 
 interface LogItem {
@@ -26,11 +23,11 @@ interface UserOption {
   user_type: string;
 }
 
-const STATUS_MAP: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
-  PENDING:    { label: '待接收', variant: 'secondary' },
-  RECEIVED:   { label: '已接收', variant: 'outline' },
-  PROCESSING: { label: '处理中', variant: 'default' },
-  COMPLETED:  { label: '已完成', variant: 'default' },
+const STATUS_MAP: Record<string, { label: string; color: "default" | "primary" | "secondary" | "success" | "warning" | "danger" }> = {
+  PENDING:    { label: '待接收', color: 'warning' },
+  RECEIVED:   { label: '已接收', color: 'primary' },
+  PROCESSING: { label: '处理中', color: 'secondary' },
+  COMPLETED:  { label: '已完成', color: 'success' },
 };
 
 export default function LogsAdmin() {
@@ -49,7 +46,7 @@ export default function LogsAdmin() {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (userId) params.set('user_id', userId);
+      if (userId && userId !== 'all') params.set('user_id', userId);
       if (title.trim()) params.set('title', title.trim());
       if (date) params.set('date', date);
       params.set('limit', String(opts?.lim ?? limit));
@@ -101,150 +98,155 @@ export default function LogsAdmin() {
       </h2>
 
       {/* 筛选栏 */}
-      <Card>
-        <CardContent className="pt-4">
+      <Card className="shadow-sm">
+        <CardBody className="py-4 px-5">
           <div className="flex flex-wrap items-end gap-3">
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">人员</label>
-              <select
-                value={userId}
-                onChange={(e) => setUserId(e.target.value)}
-                className="flex h-9 w-[180px] rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                <option value="">全部人员</option>
-                <optgroup label="A 端">
-                  {users.filter((u) => u.user_type === 'A').map((u) => (
-                    <option key={u.id} value={u.id}>{u.name}</option>
-                  ))}
-                </optgroup>
-                <optgroup label="B 端">
-                  {users.filter((u) => u.user_type === 'B').map((u) => (
-                    <option key={u.id} value={u.id}>{u.name}</option>
-                  ))}
-                </optgroup>
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">订单标题</label>
-              <Input
-                placeholder="搜索标题..."
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-[180px] h-9"
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">日期</label>
-              <Input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-[160px] h-9"
-              />
-            </div>
-            <Button size="sm" onClick={handleSearch} className="h-9">
-              <Search className="mr-1.5 h-4 w-4" />
+            <Select
+              label="人员"
+              labelPlacement="outside"
+              placeholder="全部人员"
+              selectedKeys={userId ? [userId] : []}
+              onSelectionChange={(keys) => {
+                const selectedKey = Array.from(keys)[0] as string;
+                setUserId(selectedKey || '');
+              }}
+              className="w-[180px]"
+              variant="bordered"
+              size="sm"
+            >
+              <SelectItem key="all">全部人员</SelectItem>
+              <SelectSection title="A 端" showDivider>
+                {users.filter((u) => u.user_type === 'A').map((u) => (
+                  <SelectItem key={String(u.id)}>{u.name}</SelectItem>
+                ))}
+              </SelectSection>
+              <SelectSection title="B 端">
+                {users.filter((u) => u.user_type === 'B').map((u) => (
+                  <SelectItem key={String(u.id)}>{u.name}</SelectItem>
+                ))}
+              </SelectSection>
+            </Select>
+            <Input
+              label="订单标题"
+              labelPlacement="outside"
+              placeholder="搜索标题..."
+              value={title}
+              onValueChange={setTitle}
+              className="w-[180px]"
+              variant="bordered"
+              size="sm"
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            />
+            <Input
+              type="date"
+              label="日期"
+              labelPlacement="outside"
+              value={date}
+              onValueChange={setDate}
+              className="w-[160px]"
+              variant="bordered"
+              size="sm"
+            />
+            <Button size="sm" color="primary" onPress={handleSearch} className="h-10" startContent={<Search className="h-4 w-4" />}>
               查询
             </Button>
-            <Button size="sm" variant="outline" onClick={handleClear} className="h-9">
-              <X className="mr-1.5 h-4 w-4" />
+            <Button size="sm" variant="flat" onPress={handleClear} className="h-10" startContent={<X className="h-4 w-4" />}>
               重置
             </Button>
           </div>
-        </CardContent>
+        </CardBody>
       </Card>
 
       {/* 日志列表 */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <Spinner size="lg" color="primary" />
         </div>
       ) : logs.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
+        <Card className="shadow-sm">
+          <CardBody className="py-12 text-center text-default-400">
             暂无记录
-          </CardContent>
+          </CardBody>
         </Card>
       ) : (
         <>
           <div className="space-y-3">
             {logs.map((log) => {
               const isOpen = expanded.has(log.id);
-              const st = STATUS_MAP[log.status] || { label: log.status, variant: 'secondary' as const };
+              const st = STATUS_MAP[log.status] || { label: log.status, color: 'default' };
               return (
-                <Card key={log.id} className="transition-all duration-200 hover:shadow-sm">
+                <Card key={log.id} className="shadow-sm">
                   <CardHeader className="pb-2 cursor-pointer" onClick={() => toggle(log.id)}>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between w-full">
                       <div className="flex items-center gap-3 min-w-0">
-                        <CardTitle className="text-sm font-medium truncate">{log.order_title}</CardTitle>
-                        <Badge variant={st.variant}>{st.label}</Badge>
+                        <p className="text-sm font-medium truncate">{log.order_title}</p>
+                        <Chip size="sm" variant="flat" color={st.color as any}>{st.label}</Chip>
                       </div>
                       <div className="flex items-center gap-3 shrink-0 ml-4">
-                        <span className="text-xs text-muted-foreground hidden md:inline">
+                        <span className="text-xs text-default-400 hidden md:inline">
                           {log.sender_name} → {log.receiver_name}
                         </span>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-xs text-default-400">
                           {log.created_at?.slice(0, 16).replace('T', ' ')}
                         </span>
-                        <Button variant="ghost" size="icon" className="h-6 w-6">
-                          {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        <Button variant="light" isIconOnly size="sm" className="h-6 w-6">
+                          {isOpen ? <ChevronUp className="h-4 w-4 text-default-500" /> : <ChevronDown className="h-4 w-4 text-default-500" />}
                         </Button>
                       </div>
                     </div>
                   </CardHeader>
                   {isOpen && (
-                    <CardContent className="pt-0 border-t border-border mt-2">
+                    <CardBody className="pt-0 border-t border-divider mt-2">
                       <div className="grid gap-2 text-sm pt-3">
                         <div className="grid grid-cols-[80px_1fr] gap-1">
-                          <span className="text-muted-foreground">发送人</span>
+                          <span className="text-default-400">发送人</span>
                           <span>{log.sender_name}</span>
                         </div>
                         <div className="grid grid-cols-[80px_1fr] gap-1">
-                          <span className="text-muted-foreground">接收人</span>
+                          <span className="text-default-400">接收人</span>
                           <span>{log.receiver_name}</span>
                         </div>
                         <div className="grid grid-cols-[80px_1fr] gap-1">
-                          <span className="text-muted-foreground">订单日期</span>
+                          <span className="text-default-400">订单日期</span>
                           <span>{log.order_date}</span>
                         </div>
                         {log.order_content && (
                           <div className="grid grid-cols-[80px_1fr] gap-1">
-                            <span className="text-muted-foreground">内容</span>
+                            <span className="text-default-400">内容</span>
                             <span className="whitespace-pre-wrap">{log.order_content}</span>
                           </div>
                         )}
                         <div className="grid grid-cols-[80px_1fr] gap-1">
-                          <span className="text-muted-foreground">创建时间</span>
+                          <span className="text-default-400">创建时间</span>
                           <span>{log.created_at}</span>
                         </div>
                         {log.received_at && (
                           <div className="grid grid-cols-[80px_1fr] gap-1">
-                            <span className="text-muted-foreground">接收时间</span>
+                            <span className="text-default-400">接收时间</span>
                             <span>{log.received_at}</span>
-                          </div>
+                        </div>
                         )}
                         {log.processing_at && (
                           <div className="grid grid-cols-[80px_1fr] gap-1">
-                            <span className="text-muted-foreground">处理时间</span>
+                            <span className="text-default-400">处理时间</span>
                             <span>{log.processing_at}</span>
                           </div>
                         )}
                         {log.completed_at && (
                           <div className="grid grid-cols-[80px_1fr] gap-1">
-                            <span className="text-muted-foreground">完成时间</span>
+                            <span className="text-default-400">完成时间</span>
                             <span>{log.completed_at}</span>
                           </div>
                         )}
                       </div>
-                    </CardContent>
+                    </CardBody>
                   )}
                 </Card>
               );
             })}
           </div>
           <div className="text-center pt-2">
-            <Button variant="outline" size="sm" onClick={handleLoadMore}>
+            <Button variant="flat" size="sm" onPress={handleLoadMore}>
               加载更多
             </Button>
           </div>

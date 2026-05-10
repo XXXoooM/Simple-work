@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ScrollText, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { Card, CardBody, CardHeader, Chip, Button, Spinner } from '@heroui/react';
+import { ScrollText, ChevronDown, ChevronUp } from 'lucide-react';
 import api from '@/lib/api';
 
 interface LogItem {
@@ -18,11 +16,11 @@ interface LogItem {
   receiver_name: string;
 }
 
-const STATUS_MAP: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
-  PENDING:    { label: '待接收', variant: 'secondary' },
-  RECEIVED:   { label: '已接收', variant: 'outline' },
-  PROCESSING: { label: '处理中', variant: 'default' },
-  COMPLETED:  { label: '已完成', variant: 'default' },
+const STATUS_MAP: Record<string, { label: string; color: "default" | "primary" | "secondary" | "success" | "warning" | "danger" }> = {
+  PENDING:    { label: '待接收', color: 'warning' },
+  RECEIVED:   { label: '已接收', color: 'primary' },
+  PROCESSING: { label: '处理中', color: 'secondary' },
+  COMPLETED:  { label: '已完成', color: 'success' },
 };
 
 export default function LogsA() {
@@ -48,7 +46,7 @@ export default function LogsA() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Spinner size="lg" color="primary" />
       </div>
     );
   }
@@ -61,72 +59,72 @@ export default function LogsA() {
       </h2>
 
       {logs.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
+        <Card className="shadow-sm">
+          <CardBody className="py-12 text-center text-default-400">
             暂无记录
-          </CardContent>
+          </CardBody>
         </Card>
       ) : (
         <div className="space-y-3">
           {logs.map((log) => {
             const isOpen = expanded.has(log.id);
-            const st = STATUS_MAP[log.status] || { label: log.status, variant: 'secondary' as const };
+            const st = STATUS_MAP[log.status] || { label: log.status, color: 'default' };
             return (
-              <Card key={log.id} className="transition-all duration-200 hover:shadow-sm">
+              <Card key={log.id} className="shadow-sm">
                 <CardHeader className="pb-2 cursor-pointer" onClick={() => toggle(log.id)}>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between w-full">
                     <div className="flex items-center gap-3 min-w-0">
-                      <CardTitle className="text-sm font-medium truncate">{log.order_title}</CardTitle>
-                      <Badge variant={st.variant}>{st.label}</Badge>
+                      <p className="text-sm font-medium truncate">{log.order_title}</p>
+                      <Chip size="sm" variant="flat" color={st.color as any}>{st.label}</Chip>
                     </div>
                     <div className="flex items-center gap-3 shrink-0 ml-4">
-                      <span className="text-xs text-muted-foreground hidden sm:inline">
+                      <span className="text-xs text-default-400 hidden sm:inline">
                         → {log.receiver_name}
                       </span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-default-400">
                         {log.created_at?.slice(0, 16).replace('T', ' ')}
                       </span>
-                      <Button variant="ghost" size="icon" className="h-6 w-6">
-                        {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      <Button variant="light" isIconOnly size="sm" className="h-6 w-6">
+                        {isOpen ? <ChevronUp className="h-4 w-4 text-default-500" /> : <ChevronDown className="h-4 w-4 text-default-500" />}
                       </Button>
                     </div>
                   </div>
                 </CardHeader>
                 {isOpen && (
-                  <CardContent className="pt-0 border-t border-border mt-2">
+                  <CardBody className="pt-0 border-t border-divider mt-2">
                     <div className="grid gap-2 text-sm pt-3">
                       <div className="grid grid-cols-[80px_1fr] gap-1">
-                        <span className="text-muted-foreground">接收人</span>
+                        <span className="text-default-400">接收人</span>
                         <span>{log.receiver_name}</span>
                       </div>
                       <div className="grid grid-cols-[80px_1fr] gap-1">
-                        <span className="text-muted-foreground">订单日期</span>
+                        <span className="text-default-400">订单日期</span>
                         <span>{log.order_date}</span>
                       </div>
                       {log.order_content && (
                         <div className="grid grid-cols-[80px_1fr] gap-1">
-                          <span className="text-muted-foreground">内容</span>
+                          <span className="text-default-400">内容</span>
                           <span className="whitespace-pre-wrap">{log.order_content}</span>
                         </div>
                       )}
                       <div className="grid grid-cols-[80px_1fr] gap-1">
-                        <span className="text-muted-foreground">创建时间</span>
+                        <span className="text-default-400">创建时间</span>
                         <span>{log.created_at}</span>
                       </div>
                       {log.received_at && (
                         <div className="grid grid-cols-[80px_1fr] gap-1">
-                          <span className="text-muted-foreground">接收时间</span>
+                          <span className="text-default-400">接收时间</span>
                           <span>{log.received_at}</span>
                         </div>
                       )}
                       {log.completed_at && (
                         <div className="grid grid-cols-[80px_1fr] gap-1">
-                          <span className="text-muted-foreground">完成时间</span>
+                          <span className="text-default-400">完成时间</span>
                           <span>{log.completed_at}</span>
                         </div>
                       )}
                     </div>
-                  </CardContent>
+                  </CardBody>
                 )}
               </Card>
             );

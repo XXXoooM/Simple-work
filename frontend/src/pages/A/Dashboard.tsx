@@ -1,7 +1,4 @@
-
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { Button, Card, CardBody, CardHeader, Divider } from '@heroui/react';
 import { Plus, History, ClipboardList, BarChart3, ScrollText } from 'lucide-react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import NotificationBell from '@/components/NotificationBell';
@@ -18,49 +15,53 @@ export default function DashboardA() {
       <title>A 端工作台 - 部门协作下单系统</title>
 
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-md">
+      <header className="sticky top-0 z-50 border-b border-divider bg-content1/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <div className="flex items-center gap-6">
             <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
               <ClipboardList className="h-5 w-5" />
               下单工作台
             </h1>
-            <Separator orientation="vertical" className="h-6" />
+            <Divider orientation="vertical" className="h-6" />
             <nav className="flex items-center gap-1">
               <Button
-                variant={location.pathname === '/a/create' ? 'secondary' : 'ghost'}
+                variant={location.pathname === '/a/create' ? 'flat' : 'light'}
+                color={location.pathname === '/a/create' ? 'primary' : 'default'}
                 size="sm"
-                onClick={() => navigate('/a/create')}
-                className="transition-all duration-200"
+                onPress={() => navigate('/a/create')}
+                className="transition-all duration-200 font-medium"
+                startContent={<Plus className="h-4 w-4" />}
               >
-                <Plus className="mr-1.5 h-4 w-4" />
                 创建订单
               </Button>
               <Button
-                variant={location.pathname === '/a/history' ? 'secondary' : 'ghost'}
+                variant={location.pathname === '/a/history' ? 'flat' : 'light'}
+                color={location.pathname === '/a/history' ? 'primary' : 'default'}
                 size="sm"
-                onClick={() => navigate('/a/history')}
-                className="transition-all duration-200"
+                onPress={() => navigate('/a/history')}
+                className="transition-all duration-200 font-medium"
+                startContent={<History className="h-4 w-4" />}
               >
-                <History className="mr-1.5 h-4 w-4" />
                 历史订单
               </Button>
               <Button
-                variant={location.pathname === '/a/stats' ? 'secondary' : 'ghost'}
+                variant={location.pathname === '/a/stats' ? 'flat' : 'light'}
+                color={location.pathname === '/a/stats' ? 'primary' : 'default'}
                 size="sm"
-                onClick={() => navigate('/a/stats')}
-                className="transition-all duration-200"
+                onPress={() => navigate('/a/stats')}
+                className="transition-all duration-200 font-medium"
+                startContent={<BarChart3 className="h-4 w-4" />}
               >
-                <BarChart3 className="mr-1.5 h-4 w-4" />
                 统计看板
               </Button>
               <Button
-                variant={location.pathname === '/a/logs' ? 'secondary' : 'ghost'}
+                variant={location.pathname === '/a/logs' ? 'flat' : 'light'}
+                color={location.pathname === '/a/logs' ? 'primary' : 'default'}
                 size="sm"
-                onClick={() => navigate('/a/logs')}
-                className="transition-all duration-200"
+                onPress={() => navigate('/a/logs')}
+                className="transition-all duration-200 font-medium"
+                startContent={<ScrollText className="h-4 w-4" />}
               >
-                <ScrollText className="mr-1.5 h-4 w-4" />
                 操作日志
               </Button>
             </nav>
@@ -77,47 +78,45 @@ export default function DashboardA() {
         {isRoot ? (
           <div className="grid gap-6 md:grid-cols-2">
             <Card
-              className="cursor-pointer transition-all duration-200 hover:shadow-md hover:border-primary/30"
-              onClick={() => navigate('/a/create')}
+              isPressable
+              onPress={() => navigate('/a/create')}
+              className="border border-transparent hover:border-primary/30 shadow-sm hover:shadow-md transition-all duration-200"
             >
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                    <Plus className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-base">创建订单</CardTitle>
-                    <CardDescription>选择接收人，填写订单信息</CardDescription>
-                  </div>
+              <CardHeader className="flex gap-3 px-6 pt-6 pb-2">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                  <Plus className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex flex-col text-left">
+                  <p className="text-base font-semibold text-foreground">创建订单</p>
+                  <p className="text-sm text-default-500">选择接收人，填写订单信息</p>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
+              <CardBody className="px-6 pb-6 pt-2">
+                <p className="text-sm text-default-400">
                   选择日期和 B 端人员，创建新的协作订单。
                 </p>
-              </CardContent>
+              </CardBody>
             </Card>
 
             <Card
-              className="cursor-pointer transition-all duration-200 hover:shadow-md hover:border-primary/30"
-              onClick={() => navigate('/a/history')}
+              isPressable
+              onPress={() => navigate('/a/history')}
+              className="border border-transparent hover:border-primary/30 shadow-sm hover:shadow-md transition-all duration-200"
             >
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                    <History className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-base">历史订单</CardTitle>
-                    <CardDescription>查看全部订单记录与状态</CardDescription>
-                  </div>
+              <CardHeader className="flex gap-3 px-6 pt-6 pb-2">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                  <History className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex flex-col text-left">
+                  <p className="text-base font-semibold text-foreground">历史订单</p>
+                  <p className="text-sm text-default-500">查看全部订单记录与状态</p>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
+              <CardBody className="px-6 pb-6 pt-2">
+                <p className="text-sm text-default-400">
                   查看所有已创建的订单，跟踪处理进度。
                 </p>
-              </CardContent>
+              </CardBody>
             </Card>
           </div>
         ) : (

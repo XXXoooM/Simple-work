@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardBody, CardHeader, Spinner } from '@heroui/react';
 import { FileText, Clock, Loader2, CheckCircle2, BarChart3, Timer } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -35,7 +35,7 @@ export default function StatsB() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Spinner size="lg" color="primary" />
       </div>
     );
   }
@@ -55,81 +55,81 @@ export default function StatsB() {
 
       {/* 数字卡片 */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">总接收</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <p className="text-sm font-medium text-default-500">总接收</p>
+            <FileText className="h-4 w-4 text-default-500" />
           </CardHeader>
-          <CardContent>
+          <CardBody className="pt-0">
             <div className="text-3xl font-bold">{data.counts.total}</div>
-          </CardContent>
+          </CardBody>
         </Card>
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">待接收</CardTitle>
-            <Clock className="h-4 w-4 text-orange-500" />
+            <p className="text-sm font-medium text-default-500">待接收</p>
+            <Clock className="h-4 w-4 text-warning" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-orange-600">{data.counts.pending}</div>
-          </CardContent>
+          <CardBody className="pt-0">
+            <div className="text-3xl font-bold text-warning">{data.counts.pending}</div>
+          </CardBody>
         </Card>
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">处理中</CardTitle>
-            <Loader2 className="h-4 w-4 text-blue-500" />
+            <p className="text-sm font-medium text-default-500">处理中</p>
+            <Loader2 className="h-4 w-4 text-primary" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-blue-600">
+          <CardBody className="pt-0">
+            <div className="text-3xl font-bold text-primary">
               {data.counts.received + data.counts.processing}
             </div>
-          </CardContent>
+          </CardBody>
         </Card>
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">已完成</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+            <p className="text-sm font-medium text-default-500">已完成</p>
+            <CheckCircle2 className="h-4 w-4 text-success" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-emerald-600">{data.counts.completed}</div>
-            <p className="text-xs text-muted-foreground mt-1">完成率 {completionRate}%</p>
-          </CardContent>
+          <CardBody className="pt-0">
+            <div className="text-3xl font-bold text-success">{data.counts.completed}</div>
+            <p className="text-xs text-default-400 mt-1">完成率 {completionRate}%</p>
+          </CardBody>
         </Card>
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">平均处理时长</CardTitle>
-            <Timer className="h-4 w-4 text-violet-500" />
+            <p className="text-sm font-medium text-default-500">平均处理时长</p>
+            <Timer className="h-4 w-4 text-secondary" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-violet-600">
+          <CardBody className="pt-0">
+            <div className="text-2xl font-bold text-secondary">
               {formatDuration(data.avgProcessSeconds)}
             </div>
-          </CardContent>
+          </CardBody>
         </Card>
       </div>
 
       {/* 趋势图 */}
-      <Card>
+      <Card className="shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base">近 7 天接单趋势</CardTitle>
+          <p className="text-base font-semibold">近 7 天接单趋势</p>
         </CardHeader>
-        <CardContent>
+        <CardBody>
           {data.trend.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={data.trend}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                <CartesianGrid strokeDasharray="3 3" className="stroke-divider" />
                 <XAxis dataKey="date" tick={{ fontSize: 12 }} tickFormatter={(v: string) => v.slice(5)} />
                 <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
                 <Tooltip
-                  contentStyle={{ borderRadius: '8px', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}
+                  contentStyle={{ borderRadius: '8px', border: '1px solid hsl(var(--heroui-divider))', background: 'hsl(var(--heroui-content1))' }}
                   labelFormatter={(label) => `日期: ${label}`}
                 />
-                <Line type="monotone" dataKey="count" stroke="hsl(160, 60%, 45%)" strokeWidth={2} dot={{ r: 4 }} name="接单数" />
+                <Line type="monotone" dataKey="count" stroke="hsl(var(--heroui-secondary))" strokeWidth={2} dot={{ r: 4 }} name="接单数" />
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-[300px] text-muted-foreground text-sm">暂无数据</div>
+            <div className="flex items-center justify-center h-[300px] text-default-400 text-sm">暂无数据</div>
           )}
-        </CardContent>
+        </CardBody>
       </Card>
     </div>
   );

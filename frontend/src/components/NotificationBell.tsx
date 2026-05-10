@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Bell, Check, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect, useCallback } from 'react';
+import { Bell, Check } from 'lucide-react';
+import { Button, Popover, PopoverTrigger, PopoverContent, Badge, ScrollShadow } from '@heroui/react';
 import api from '@/lib/api';
 
 interface Notification {
@@ -15,9 +15,7 @@ interface Notification {
 export default function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -33,17 +31,6 @@ export default function NotificationBell() {
     const timer = setInterval(fetchNotifications, 30000);
     return () => clearInterval(timer);
   }, [fetchNotifications]);
-
-  // 点击外部关闭
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
 
   const handleMarkAllRead = async () => {
     setLoading(true);
@@ -67,48 +54,52 @@ export default function NotificationBell() {
   };
 
   return (
-    <div className="relative" ref={ref}>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="relative h-8 w-8"
-        onClick={() => setOpen(!open)}
-      >
-        <Bell className="h-4 w-4" />
-        {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </span>
-        )}
-      </Button>
+    <Popover placement="bottom-end">
+      <PopoverTrigger>
+        <Button
+          variant="light"
+          isIconOnly
+          className="relative h-9 w-9 data-[hover=true]:bg-transparent"
+        >
+          <Badge
+            content={unreadCount > 99 ? '99+' : unreadCount}
+            color="danger"
+            isInvisible={unreadCount === 0}
+            shape="circle"
+          >
+            <Bell className="h-5 w-5 text-default-600" />
+          </Badge>
+        </Button>
+      </PopoverTrigger>
 
-      {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 rounded-lg border border-border bg-card shadow-lg z-50">
-          <div className="flex items-center justify-between border-b border-border px-4 py-3">
+      <PopoverContent className="w-80 p-0">
+        <div className="w-full">
+          <div className="flex items-center justify-between border-b border-divider px-4 py-3">
             <span className="text-sm font-medium">消息通知</span>
             {unreadCount > 0 && (
               <Button
-                variant="ghost"
+                variant="light"
                 size="sm"
+                color="primary"
+                onPress={handleMarkAllRead}
+                isLoading={loading}
+                startContent={!loading && <Check className="h-3 w-3" />}
                 className="h-7 text-xs"
-                onClick={handleMarkAllRead}
-                disabled={loading}
               >
-                {loading ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Check className="mr-1 h-3 w-3" />}
                 全部已读
               </Button>
             )}
           </div>
-          <div className="max-h-80 overflow-y-auto">
+          <ScrollShadow className="max-h-[320px] w-full">
             {notifications.length === 0 ? (
-              <div className="py-8 text-center text-sm text-muted-foreground">
+              <div className="py-8 text-center text-sm text-default-400">
                 暂无消息
               </div>
             ) : (
               notifications.map((n) => (
                 <div
                   key={n.id}
-                  className={`border-b border-border last:border-0 px-4 py-3 transition-colors ${
+                  className={`border-b border-divider last:border-0 px-4 py-3 transition-colors ${
                     n.is_read === 0 ? 'bg-primary/5' : ''
                   }`}
                 >
@@ -121,21 +112,21 @@ export default function NotificationBell() {
                         <span className="text-sm font-medium truncate">{n.title}</span>
                       </div>
                       {n.content && (
-                        <p className="mt-1 text-xs text-muted-foreground line-clamp-2 whitespace-pre-wrap">
+                        <p className="mt-1 text-xs text-default-500 line-clamp-2 whitespace-pre-wrap">
                           {n.content}
                         </p>
                       )}
                     </div>
-                    <span className="shrink-0 text-[11px] text-muted-foreground">
+                    <span className="shrink-0 text-[11px] text-default-400">
                       {timeAgo(n.created_at)}
                     </span>
                   </div>
                 </div>
               ))
             )}
-          </div>
+          </ScrollShadow>
         </div>
-      )}
-    </div>
+      </PopoverContent>
+    </Popover>
   );
 }

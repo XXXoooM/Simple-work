@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
-import { Button } from '@/components/ui/button';
+import { Button, Input, Card, CardBody } from '@heroui/react';
 import { LogIn, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -45,7 +45,7 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-white to-indigo-50">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary-50 via-background to-secondary-50">
       <div className="w-full max-w-md px-6">
         {/* Logo 区域 */}
         <div className="mb-8 text-center">
@@ -61,76 +61,54 @@ export default function Login() {
         </div>
 
         {/* 登录表单 */}
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-5 rounded-xl border border-border bg-card p-8 shadow-sm"
-        >
-          {/* 用户名 */}
-          <div className="space-y-2">
-            <label htmlFor="username" className="text-sm font-medium text-foreground">
-              用户名
-            </label>
-            <input
-              id="username"
-              type="text"
-              autoComplete="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="请输入用户名"
-              className="flex h-10 w-full rounded-lg border border-input bg-background px-3 text-sm transition-colors placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
-            />
-          </div>
-
-          {/* 密码 */}
-          <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium text-foreground">
-              密码
-            </label>
-            <div className="relative">
-              <input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="请输入密码"
-                className="flex h-10 w-full rounded-lg border border-input bg-background px-3 pr-10 text-sm transition-colors placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
+        <Card className="shadow-md">
+          <CardBody className="p-8">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+              <Input
+                label="用户名"
+                placeholder="请输入用户名"
+                variant="bordered"
+                value={username}
+                onValueChange={setUsername}
+                isRequired
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                tabIndex={-1}
+
+              <Input
+                label="密码"
+                placeholder="请输入密码"
+                variant="bordered"
+                value={password}
+                onValueChange={setPassword}
+                type={showPassword ? "text" : "password"}
+                isRequired
+                endContent={
+                  <button className="focus:outline-none" type="button" onClick={() => setShowPassword(!showPassword)}>
+                    {showPassword ? (
+                      <EyeOff className="text-2xl text-default-400 pointer-events-none" />
+                    ) : (
+                      <Eye className="text-2xl text-default-400 pointer-events-none" />
+                    )}
+                  </button>
+                }
+              />
+
+              <Button
+                type="submit"
+                color="primary"
+                size="lg"
+                className="mt-2"
+                isLoading={loading}
+                startContent={!loading && <LogIn className="h-4 w-4" />}
               >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
+                {loading ? '登录中...' : '登录'}
+              </Button>
 
-          {/* 登录按钮 */}
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={loading}
-            size="lg"
-          >
-            {loading ? (
-              <span className="flex items-center gap-2">
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                登录中...
-              </span>
-            ) : (
-              <span className="flex items-center gap-2">
-                <LogIn className="h-4 w-4" />
-                登录
-              </span>
-            )}
-          </Button>
-
-          <p className="text-center text-xs text-muted-foreground">
-            本系统无注册功能，请联系管理员创建账号
-          </p>
-        </form>
+              <p className="text-center text-xs text-default-400 mt-2">
+                本系统无注册功能，请联系管理员创建账号
+              </p>
+            </form>
+          </CardBody>
+        </Card>
       </div>
     </div>
   );

@@ -1,18 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '@/lib/api';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from '@/components/ui/table';
-import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog';
+import { 
+  Button, Chip, Input, Checkbox, 
+  Table, TableHeader, TableColumn, TableBody, TableRow, TableCell,
+  Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Spinner
+} from '@heroui/react';
 import { toast } from 'sonner';
-import { ArrowLeft, Plus, Loader2, Pencil, Trash2, Lock } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Lock } from 'lucide-react';
 
 // 所有可分配的权限
 const ALL_PERMISSIONS = [
@@ -80,10 +75,12 @@ export default function RoleList() {
   };
 
   // 切换权限
-  const togglePerm = (key: string) => {
-    setFormPerms((prev) =>
-      prev.includes(key) ? prev.filter((p) => p !== key) : [...prev, key]
-    );
+  const togglePerm = (key: string, isSelected: boolean) => {
+    if (isSelected) {
+      setFormPerms((prev) => [...prev, key]);
+    } else {
+      setFormPerms((prev) => prev.filter((p) => p !== key));
+    }
   };
 
   // 保存
@@ -134,79 +131,74 @@ export default function RoleList() {
     <div>
       <title>角色管理 - 管理后台</title>
 
-      <Button variant="ghost" size="sm" onClick={() => navigate('/admin')} className="mb-4 -ml-2">
-        <ArrowLeft className="mr-1.5 h-4 w-4" />
+      <Button variant="light" size="sm" onPress={() => navigate('/admin')} className="mb-4 -ml-2 text-default-600" startContent={<ArrowLeft className="h-4 w-4" />}>
         返回管理后台
       </Button>
 
-      <div className="rounded-xl border border-border bg-card">
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+      <div className="rounded-xl border border-divider bg-content1 shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between border-b border-divider px-6 py-4">
           <div>
             <h2 className="text-lg font-semibold text-foreground">角色管理</h2>
-            <p className="text-sm text-muted-foreground">共 {roles.length} 个角色</p>
+            <p className="text-sm text-default-500">共 {roles.length} 个角色</p>
           </div>
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="mr-1.5 h-4 w-4" />
+          <Button size="sm" color="primary" onPress={openCreate} startContent={<Plus className="h-4 w-4" />}>
             创建角色
           </Button>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <Spinner size="lg" color="primary" />
           </div>
         ) : (
-          <Table>
+          <Table removeWrapper aria-label="角色列表">
             <TableHeader>
-              <TableRow>
-                <TableHead className="w-16">ID</TableHead>
-                <TableHead>角色名</TableHead>
-                <TableHead>权限</TableHead>
-                <TableHead>类型</TableHead>
-                <TableHead className="text-right">操作</TableHead>
-              </TableRow>
+              <TableColumn>ID</TableColumn>
+              <TableColumn>角色名</TableColumn>
+              <TableColumn>权限</TableColumn>
+              <TableColumn>类型</TableColumn>
+              <TableColumn align="end">操作</TableColumn>
             </TableHeader>
             <TableBody>
               {roles.map((role) => (
-                <TableRow key={role.id} className="transition-colors duration-150">
-                  <TableCell className="font-mono text-xs text-muted-foreground">#{role.id}</TableCell>
+                <TableRow key={role.id}>
+                  <TableCell className="font-mono text-xs text-default-400">#{role.id}</TableCell>
                   <TableCell className="font-medium">{role.name}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
                       {role.permissions.includes('*') ? (
-                        <Badge variant="default">全部权限</Badge>
+                        <Chip size="sm" color="primary" variant="flat">全部权限</Chip>
                       ) : role.permissions.length === 0 ? (
-                        <span className="text-xs text-muted-foreground">无权限</span>
+                        <span className="text-xs text-default-400">无权限</span>
                       ) : (
                         role.permissions.map((p) => (
-                          <Badge key={p} variant="outline" className="text-xs">{p}</Badge>
+                          <Chip key={p} size="sm" variant="flat" className="text-xs">{p}</Chip>
                         ))
                       )}
                     </div>
                   </TableCell>
                   <TableCell>
                     {role.is_preset ? (
-                      <Badge variant="secondary">
-                        <Lock className="mr-1 h-3 w-3" />预设
-                      </Badge>
+                      <Chip size="sm" variant="flat" color="secondary" startContent={<Lock className="h-3 w-3" />}>
+                        预设
+                      </Chip>
                     ) : (
-                      <Badge variant="outline">自定义</Badge>
+                      <Chip size="sm" variant="flat">自定义</Chip>
                     )}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell>
                     <div className="flex items-center justify-end gap-2">
-                      <Button variant="outline" size="sm" onClick={() => openEdit(role)}>
-                        <Pencil className="mr-1 h-3.5 w-3.5" />
+                      <Button variant="flat" size="sm" onPress={() => openEdit(role)} startContent={<Pencil className="h-3.5 w-3.5" />}>
                         编辑
                       </Button>
                       {!role.is_preset && (
                         <Button
-                          variant="outline"
+                          variant="flat"
+                          color="danger"
                           size="sm"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => handleDelete(role)}
+                          onPress={() => handleDelete(role)}
+                          startContent={<Trash2 className="h-3.5 w-3.5" />}
                         >
-                          <Trash2 className="mr-1 h-3.5 w-3.5" />
                           删除
                         </Button>
                       )}
@@ -219,53 +211,54 @@ export default function RoleList() {
         )}
       </div>
 
-      {/* 创建/编辑角色 Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{editing ? '编辑角色' : '创建新角色'}</DialogTitle>
-            <DialogDescription>
-              {editing ? '修改角色名称和权限配置。' : '设置角色名称并选择权限。'}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label>角色名称</Label>
-              <Input
-                placeholder="例如：编辑主管"
-                value={formName}
-                onChange={(e) => setFormName(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>权限配置</Label>
-              <div className="grid grid-cols-3 gap-2 rounded-lg border border-border p-3">
-                {ALL_PERMISSIONS.map((p) => (
-                  <label
-                    key={p.key}
-                    className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-muted"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={formPerms.includes(p.key)}
-                      onChange={() => togglePerm(p.key)}
-                      className="h-4 w-4 rounded border-border accent-primary"
-                    />
-                    {p.label}
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>取消</Button>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {editing ? '保存' : '创建'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* 创建/编辑角色 Modal */}
+      <Modal isOpen={dialogOpen} onOpenChange={setDialogOpen} size="2xl">
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                {editing ? '编辑角色' : '创建新角色'}
+                <span className="text-sm font-normal text-default-500">
+                  {editing ? '修改角色名称和权限配置。' : '设置角色名称并选择权限。'}
+                </span>
+              </ModalHeader>
+              <ModalBody>
+                <div className="space-y-6 py-2">
+                  <Input
+                    label="角色名称"
+                    labelPlacement="outside"
+                    placeholder="例如：编辑主管"
+                    value={formName}
+                    onValueChange={setFormName}
+                    variant="bordered"
+                  />
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-3">权限配置</label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 rounded-lg border border-divider p-4">
+                      {ALL_PERMISSIONS.map((p) => (
+                        <Checkbox
+                          key={p.key}
+                          isSelected={formPerms.includes(p.key)}
+                          onValueChange={(isSelected) => togglePerm(p.key, isSelected)}
+                          size="sm"
+                        >
+                          {p.label}
+                        </Checkbox>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={onClose}>取消</Button>
+                <Button color="primary" onPress={handleSave} isLoading={saving}>
+                  {saving ? '保存中' : (editing ? '保存' : '创建')}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

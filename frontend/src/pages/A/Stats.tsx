@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardBody, CardHeader, Spinner } from '@heroui/react';
 import { FileText, Clock, Loader2, CheckCircle2, BarChart3 } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -29,7 +29,7 @@ export default function StatsA() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Spinner size="lg" color="primary" />
       </div>
     );
   }
@@ -49,88 +49,88 @@ export default function StatsA() {
 
       {/* 数字卡片 */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">总订单</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <p className="text-sm font-medium text-default-500">总订单</p>
+            <FileText className="h-4 w-4 text-default-500" />
           </CardHeader>
-          <CardContent>
+          <CardBody className="pt-0">
             <div className="text-3xl font-bold">{data.counts.total}</div>
-          </CardContent>
+          </CardBody>
         </Card>
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">待处理</CardTitle>
-            <Clock className="h-4 w-4 text-orange-500" />
+            <p className="text-sm font-medium text-default-500">待处理</p>
+            <Clock className="h-4 w-4 text-warning" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-orange-600">
+          <CardBody className="pt-0">
+            <div className="text-3xl font-bold text-warning">
               {data.counts.pending + data.counts.received}
             </div>
-          </CardContent>
+          </CardBody>
         </Card>
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">进行中</CardTitle>
-            <Loader2 className="h-4 w-4 text-blue-500" />
+            <p className="text-sm font-medium text-default-500">进行中</p>
+            <Loader2 className="h-4 w-4 text-primary" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-blue-600">{data.counts.processing}</div>
-          </CardContent>
+          <CardBody className="pt-0">
+            <div className="text-3xl font-bold text-primary">{data.counts.processing}</div>
+          </CardBody>
         </Card>
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">已完成</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+            <p className="text-sm font-medium text-default-500">已完成</p>
+            <CheckCircle2 className="h-4 w-4 text-success" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-emerald-600">{data.counts.completed}</div>
-            <p className="text-xs text-muted-foreground mt-1">完成率 {completionRate}%</p>
-          </CardContent>
+          <CardBody className="pt-0">
+            <div className="text-3xl font-bold text-success">{data.counts.completed}</div>
+            <p className="text-xs text-default-400 mt-1">完成率 {completionRate}%</p>
+          </CardBody>
         </Card>
       </div>
 
       {/* 图表区域 */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* 近 7 天趋势 */}
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader>
-            <CardTitle className="text-base">近 7 天下单趋势</CardTitle>
+            <p className="text-base font-semibold">近 7 天下单趋势</p>
           </CardHeader>
-          <CardContent>
+          <CardBody>
             {data.trend.length > 0 ? (
               <ResponsiveContainer width="100%" height={260}>
                 <LineChart data={data.trend}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-divider" />
                   <XAxis dataKey="date" tick={{ fontSize: 12 }} tickFormatter={(v: string) => v.slice(5)} />
                   <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
                   <Tooltip
-                    contentStyle={{ borderRadius: '8px', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}
+                    contentStyle={{ borderRadius: '8px', border: '1px solid hsl(var(--heroui-divider))', background: 'hsl(var(--heroui-content1))' }}
                     labelFormatter={(label) => `日期: ${label}`}
                   />
-                  <Line type="monotone" dataKey="count" stroke="hsl(220, 90%, 56%)" strokeWidth={2} dot={{ r: 4 }} name="订单数" />
+                  <Line type="monotone" dataKey="count" stroke="hsl(var(--heroui-primary))" strokeWidth={2} dot={{ r: 4 }} name="订单数" />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[260px] text-muted-foreground text-sm">暂无数据</div>
+              <div className="flex items-center justify-center h-[260px] text-default-400 text-sm">暂无数据</div>
             )}
-          </CardContent>
+          </CardBody>
         </Card>
 
         {/* 按接收人分布 */}
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader>
-            <CardTitle className="text-base">接收人分布</CardTitle>
+            <p className="text-base font-semibold">接收人分布</p>
           </CardHeader>
-          <CardContent>
+          <CardBody>
             {data.receivers.length > 0 ? (
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={data.receivers} layout="vertical" margin={{ left: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-divider" />
                   <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} />
                   <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} width={80} />
                   <Tooltip
-                    contentStyle={{ borderRadius: '8px', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}
+                    contentStyle={{ borderRadius: '8px', border: '1px solid hsl(var(--heroui-divider))', background: 'hsl(var(--heroui-content1))' }}
                   />
                   <Bar dataKey="count" name="订单数" radius={[0, 4, 4, 0]}>
                     {data.receivers.map((_: unknown, i: number) => (
@@ -140,9 +140,9 @@ export default function StatsA() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[260px] text-muted-foreground text-sm">暂无数据</div>
+              <div className="flex items-center justify-center h-[260px] text-default-400 text-sm">暂无数据</div>
             )}
-          </CardContent>
+          </CardBody>
         </Card>
       </div>
     </div>

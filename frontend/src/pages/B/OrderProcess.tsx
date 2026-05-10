@@ -1,15 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '@/lib/api';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog';
+import { Button, Card, CardBody, CardHeader, Chip, Spinner, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Textarea } from '@heroui/react';
 import { toast } from 'sonner';
-import { ArrowLeft, Play, CheckCircle, Loader2, ListTodo, User, Calendar } from 'lucide-react';
+import { ArrowLeft, Play, CheckCircle, ListTodo, User, Calendar } from 'lucide-react';
 
 interface ActiveOrder {
   id: number;
@@ -22,17 +16,17 @@ interface ActiveOrder {
   processing_at: string | null;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline'; nextStatus: string | null; nextLabel: string; nextIcon: typeof Play }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: "default" | "primary" | "secondary" | "success" | "warning" | "danger"; nextStatus: string | null; nextLabel: string; nextIcon: typeof Play }> = {
   RECEIVED: {
     label: '已接收',
-    variant: 'secondary',
+    color: 'primary',
     nextStatus: 'PROCESSING',
     nextLabel: '开始处理',
     nextIcon: Play,
   },
   PROCESSING: {
     label: '处理中',
-    variant: 'default',
+    color: 'secondary',
     nextStatus: 'COMPLETED',
     nextLabel: '标记完成',
     nextIcon: CheckCircle,
@@ -100,40 +94,41 @@ export default function OrderProcess() {
       <title>进行中订单 - 部门协作下单系统</title>
 
       <Button
-        variant="ghost"
+        variant="light"
         size="sm"
-        onClick={() => navigate('/b')}
-        className="mb-4 -ml-2"
+        onPress={() => navigate('/b')}
+        className="mb-4 -ml-2 text-default-600"
+        startContent={<ArrowLeft className="h-4 w-4" />}
       >
-        <ArrowLeft className="mr-1.5 h-4 w-4" />
         返回工作台
       </Button>
 
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-foreground">进行中订单</h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-default-500">
             共 {orders.length} 个进行中订单
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchActiveOrders} disabled={loading}>
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : '刷新'}
+        <Button variant="bordered" size="sm" onPress={fetchActiveOrders} isLoading={loading}>
+          {loading ? '刷新中' : '刷新'}
         </Button>
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <Spinner size="lg" color="primary" />
         </div>
       ) : orders.length === 0 ? (
-        <div className="rounded-xl border border-border bg-card py-20 text-center">
-          <ListTodo className="mx-auto h-12 w-12 text-muted-foreground/50 mb-3" />
-          <p className="text-sm text-muted-foreground">暂无进行中订单</p>
+        <div className="rounded-xl border border-divider bg-content1 py-20 text-center shadow-sm">
+          <ListTodo className="mx-auto h-12 w-12 text-default-400/50 mb-3" />
+          <p className="text-sm text-default-500">暂无进行中订单</p>
           <Button
-            variant="outline"
+            variant="flat"
+            color="primary"
             size="sm"
             className="mt-4"
-            onClick={() => navigate('/b/receive')}
+            onPress={() => navigate('/b/receive')}
           >
             查看待接收订单
           </Button>
@@ -148,19 +143,19 @@ export default function OrderProcess() {
             return (
               <Card
                 key={order.id}
-                className="transition-all duration-200 hover:shadow-sm"
+                className="shadow-sm"
               >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
+                <CardHeader className="pb-3 px-6 pt-6">
+                  <div className="flex items-start justify-between w-full">
                     <div className="flex-1">
-                      <CardTitle className="text-base flex items-center gap-2">
+                      <p className="text-base font-semibold flex items-center gap-2">
                         {order.order_title}
-                        <Badge variant={config.variant}>{config.label}</Badge>
-                        <Badge variant="outline" className="text-xs font-normal">
+                        <Chip variant="flat" size="sm" color={config.color}>{config.label}</Chip>
+                        <Chip variant="flat" size="sm" className="font-normal text-default-500">
                           #{order.id}
-                        </Badge>
-                      </CardTitle>
-                      <CardDescription className="mt-1.5 flex items-center gap-4">
+                        </Chip>
+                      </p>
+                      <div className="mt-1.5 flex items-center gap-4 text-sm text-default-500">
                         <span className="flex items-center gap-1">
                           <User className="h-3.5 w-3.5" />
                           {order.sender_name}
@@ -169,13 +164,14 @@ export default function OrderProcess() {
                           <Calendar className="h-3.5 w-3.5" />
                           {order.order_date}
                         </span>
-                      </CardDescription>
+                      </div>
                     </div>
                     {config.nextStatus && (
                       <Button
                         size="sm"
-                        variant={order.status === 'PROCESSING' ? 'default' : 'secondary'}
-                        onClick={() => {
+                        color={order.status === 'PROCESSING' ? 'primary' : 'secondary'}
+                        variant={order.status === 'PROCESSING' ? 'solid' : 'flat'}
+                        onPress={() => {
                           if (config.nextStatus === 'COMPLETED') {
                             setCompleteOrderId(order.id);
                             setCompleteOpen(true);
@@ -183,25 +179,21 @@ export default function OrderProcess() {
                             handleStatusUpdate(order.id, config.nextStatus!);
                           }
                         }}
-                        disabled={updatingId === order.id}
+                        isLoading={updatingId === order.id}
                         className="ml-4 transition-all duration-200"
+                        startContent={updatingId !== order.id && <NextIcon className="h-4 w-4" />}
                       >
-                        {updatingId === order.id ? (
-                          <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                        ) : (
-                          <NextIcon className="mr-1.5 h-4 w-4" />
-                        )}
-                        {config.nextLabel}
+                        {updatingId === order.id ? '更新中' : config.nextLabel}
                       </Button>
                     )}
                   </div>
                 </CardHeader>
                 {order.order_content && (
-                  <CardContent className="pt-0">
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                  <CardBody className="pt-0 px-6 pb-6">
+                    <p className="text-sm text-default-500 whitespace-pre-wrap">
                       {order.order_content}
                     </p>
-                  </CardContent>
+                  </CardBody>
                 )}
               </Card>
             );
@@ -209,33 +201,47 @@ export default function OrderProcess() {
         </div>
       )}
 
-      {/* 完成确认 Dialog */}
-      <Dialog open={completeOpen} onOpenChange={(v) => { if (!v) { setCompleteOpen(false); setCompleteRemark(''); } }}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>确认完成订单</DialogTitle>
-            <DialogDescription>标记完成后订单将从进行中列表移除。</DialogDescription>
-          </DialogHeader>
-          <div className="py-2">
-            <Textarea
-              placeholder="留言备注（可选）"
-              value={completeRemark}
-              onChange={(e) => setCompleteRemark(e.target.value)}
-              rows={3}
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setCompleteOpen(false); setCompleteRemark(''); }}>取消</Button>
-            <Button
-              onClick={() => completeOrderId && handleStatusUpdate(completeOrderId, 'COMPLETED', completeRemark)}
-              disabled={updatingId !== null}
-            >
-              {updatingId !== null ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
-              确认完成
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* 完成确认 Modal */}
+      <Modal 
+        isOpen={completeOpen} 
+        onOpenChange={(v) => { 
+          if (!v) { 
+            setCompleteOpen(false); 
+            setCompleteRemark(''); 
+          } 
+        }}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">确认完成订单</ModalHeader>
+              <ModalBody>
+                <p className="text-sm text-default-500">标记完成后订单将从进行中列表移除。</p>
+                <div className="py-2">
+                  <Textarea
+                    variant="bordered"
+                    placeholder="留言备注（可选）"
+                    value={completeRemark}
+                    onValueChange={setCompleteRemark}
+                    minRows={3}
+                  />
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={() => { onClose(); setCompleteRemark(''); }}>取消</Button>
+                <Button
+                  color="primary"
+                  onPress={() => completeOrderId && handleStatusUpdate(completeOrderId, 'COMPLETED', completeRemark)}
+                  isLoading={updatingId !== null}
+                  startContent={updatingId === null && <CheckCircle className="h-4 w-4" />}
+                >
+                  {updatingId !== null ? '确认中...' : '确认完成'}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 }
